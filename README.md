@@ -119,6 +119,12 @@ nix build path:$PWD
 nix flake check --no-build path:$PWD
 ```
 
+## License
+
+This project uses `GPL-2.0-or-later`, matching upstream `libgfxinit` and
+`libhwbase` (`COPYING` contains the GPLv2 text; upstream source headers allow
+"either version 2 of the License, or (at your option) any later version").
+
 ## Notes
 
 - `link-prebuilt` is available for integrations that build Ada archives outside
