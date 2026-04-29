@@ -10,5 +10,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "libgfxinit-src"
+version = "0.1.0"
+
+[[package]]
 name = "libgfxinit-sys"
 version = "0.1.0"
+dependencies = [
+ "libgfxinit-src",
+]

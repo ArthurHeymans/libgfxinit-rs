@@ -1,0 +1,10 @@
+[package]
+name = "libgfxinit-src"
+version = "0.1.0"
+edition = "2021"
+license = "GPL-2.0-or-later"
+description = "Vendored libhwbase/libgfxinit Ada sources for libgfxinit-sys"
+include = ["src/**", "vendor/**", "Cargo.toml"]
+
+[lib]
+path = "src/lib.rs"

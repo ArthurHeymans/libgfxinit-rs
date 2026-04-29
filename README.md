@@ -3,19 +3,44 @@
 `no_std` Rust bindings for the Ada `libhwbase` + `libgfxinit` Intel GMA
 implementation used by coreboot.
 
+The crate layout follows the OpenSSL Rust bindings pattern:
+
+- `libgfxinit-rs`: safe-ish `no_std` Rust API.
+- `libgfxinit-sys`: raw ABI plus build/discovery logic.
+- `libgfxinit-src`: optional source crate containing bundled Ada sources, used
+  only when the `vendored` feature is enabled.
+
 The intended consumer is eventually `~/src/fstart`: use libgfxinit as an Intel
 GMA framebuffer driver without rewriting the Ada implementation.
 
-## Dependency shape
+## Dependency shapes
 
-For a firmware/no_std consumer, use one hardware generation feature:
+Use externally supplied Ada source trees, like `openssl-sys` using system
+OpenSSL:
 
 ```toml
 [dependencies]
 libgfxinit-rs = { git = "https://example.invalid/libgfxinit-rs", features = ["gen-haswell"] }
 ```
 
-Available generation features:
+Then provide sources in the consuming build environment:
+
+```toml
+[env]
+LIBHWBASE_SRC = "/path/to/libhwbase"
+LIBGFXINIT_SRC = "/path/to/libgfxinit"
+```
+
+Or use the bundled source crate, like `openssl`'s `vendored` feature:
+
+```toml
+[dependencies]
+libgfxinit-rs = { git = "https://example.invalid/libgfxinit-rs", features = ["vendored", "gen-haswell"] }
+```
+
+## Generation selection
+
+Select exactly one hardware generation feature for firmware builds:
 
 - `gen-g45`
 - `gen-ironlake`
@@ -25,14 +50,12 @@ Available generation features:
 - `gen-tigerlake`
 
 Cargo features are additive, so `libgfxinit-sys` enforces that exactly one
-`gen-*` feature is selected when Ada is built. The generation is a feature
-because a dependency crate cannot reliably read the consuming package's
-`package.metadata`; board-specific details are environment/config values.
+`gen-*` feature is selected when Ada is built. CPU selection is dynamic within
+the chosen generation.
 
 Default features:
 
-- `build-ada`: build vendored `libhwbase`/`libgfxinit` Ada sources for non-hosted
-  targets.
+- `build-ada`: build libhwbase/libgfxinit Ada sources for non-hosted targets.
 - `fb-callback`: provide `fb_add_framebuffer_info_simple(...)` and store the last
   framebuffer description for Rust.
 
@@ -90,6 +113,7 @@ nix run .#check-llvm-ada
 
 ```sh
 cargo test
+cargo check --features vendored,gen-haswell
 cargo check --target x86_64-unknown-none --no-default-features --features fb-callback
 nix build path:$PWD
 nix flake check --no-build path:$PWD
@@ -97,8 +121,7 @@ nix flake check --no-build path:$PWD
 
 ## Notes
 
-- The crate vendors `libhwbase` and `libgfxinit` sources so a git dependency can
-  build without `~/src/libhwbase` or `~/src/libgfxinit` existing on the consuming
-  machine.
-- `link-prebuilt` is still available for integrations that want to build Ada
-  archives outside Cargo and only use the Rust ABI wrapper.
+- `link-prebuilt` is available for integrations that build Ada archives outside
+  Cargo and only use the Rust ABI wrapper.
+- `vendored` is optional; fstart can instead use Nix inputs or submodules and set
+  `LIBHWBASE_SRC` / `LIBGFXINIT_SRC`.

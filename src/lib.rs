@@ -11,10 +11,12 @@
 //! - `gma_read_edid(unsigned char edid[128], int port)`
 //! - optionally, the Ada-imported `fb_add_framebuffer_info_simple(...)` callback
 //!
-//! By default the companion `libgfxinit-sys` crate builds the vendored Ada
-//! sources for non-hosted firmware targets.  Hosted targets skip the Ada build
-//! unless `LIBGFXINIT_FORCE_BUILD_ADA=1` is set, which keeps ordinary Rust unit
-//! tests usable without a firmware Ada runtime.
+//! By default the companion `libgfxinit-sys` crate builds Ada sources for
+//! non-hosted firmware targets.  Sources come from `LIBHWBASE_SRC` /
+//! `LIBGFXINIT_SRC`, or from the optional `libgfxinit-src` crate when the
+//! `vendored` feature is enabled.  Hosted targets skip the Ada build unless
+//! `LIBGFXINIT_FORCE_BUILD_ADA=1` is set, which keeps ordinary Rust unit tests
+//! usable without a firmware Ada runtime.
 
 #![no_std]
 #![deny(unsafe_op_in_unsafe_fn)]

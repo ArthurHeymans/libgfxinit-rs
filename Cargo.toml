@@ -14,8 +14,11 @@ default = ["fb-callback", "build-ada"]
 # Provide the Ada-imported fb_add_framebuffer_info_simple() symbol and store
 # the last framebuffer description for Rust callers.
 fb-callback = []
-# Build vendored libhwbase/libgfxinit Ada sources for non-hosted targets.
+# Build libhwbase/libgfxinit Ada sources for non-hosted targets.
 build-ada = ["libgfxinit-sys/build-ada"]
+# Use the companion libgfxinit-src crate's bundled Ada sources, matching the
+# openssl/openssl-sys/openssl-src pattern.
+vendored = ["libgfxinit-sys/vendored"]
 # Verify/link already-built Ada archives instead of building vendored sources.
 link-prebuilt = ["libgfxinit-sys/link-prebuilt"]
 # Link hosted libgnat. Firmware integrations usually provide their own RTS.

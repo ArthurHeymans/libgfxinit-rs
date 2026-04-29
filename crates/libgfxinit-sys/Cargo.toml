@@ -12,8 +12,12 @@ path = "src/lib.rs"
 
 [features]
 default = ["build-ada"]
-# Build vendored libhwbase/libgfxinit Ada sources for non-hosted targets.
+# Build libhwbase/libgfxinit Ada sources for non-hosted targets. By default,
+# sources come from LIBHWBASE_SRC and LIBGFXINIT_SRC. Enable `vendored` to use
+# the companion libgfxinit-src crate instead.
 build-ada = ["llvm-ada-toolchain"]
+# Use libgfxinit-src's bundled Ada sources, like openssl-sys's vendored mode.
+vendored = ["dep:libgfxinit-src"]
 # Only verify/link an already-built libgfxinit/libhw archive.
 link-prebuilt = ["llvm-ada-toolchain"]
 # Enforce that ADA_CC is GNAT LLVM.
@@ -31,3 +35,6 @@ gen-haswell = []
 gen-broxton = []
 gen-skylake = []
 gen-tigerlake = []
+
+[build-dependencies]
+libgfxinit-src = { path = "../libgfxinit-src", version = "0.1.0", optional = true }

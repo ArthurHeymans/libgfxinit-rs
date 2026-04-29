@@ -25,7 +25,7 @@ fn main() {
     }
 
     if should_build_ada {
-        build_vendored_ada();
+        build_ada_archive();
     } else if build_ada {
         println!("cargo:warning=libgfxinit-sys: skipping Ada build for hosted target; set LIBGFXINIT_FORCE_BUILD_ADA=1 to force it");
     }
@@ -37,6 +37,8 @@ fn rerun_env() {
         "ADA_BIND",
         "AR",
         "LIBGFXINIT_FORCE_BUILD_ADA",
+        "LIBHWBASE_SRC",
+        "LIBGFXINIT_SRC",
         "LIBGFXINIT_GENERATION",
         "LIBGFXINIT_PCH",
         "LIBGFXINIT_PANEL_1_PORT",
@@ -54,8 +56,6 @@ fn rerun_env() {
     }
 
     println!("cargo:rerun-if-changed=build_support/bridge");
-    println!("cargo:rerun-if-changed=../../vendor/libhwbase");
-    println!("cargo:rerun-if-changed=../../vendor/libgfxinit");
 }
 
 fn should_build_ada_for_target() -> bool {
@@ -92,20 +92,19 @@ fn verify_llvm_ada_compiler(ada_cc: &str) {
     }
 }
 
-fn build_vendored_ada() {
+fn build_ada_archive() {
     let manifest_dir = PathBuf::from(env::var_os("CARGO_MANIFEST_DIR").unwrap());
     let out_dir = PathBuf::from(env::var_os("OUT_DIR").unwrap());
     let work = out_dir.join("ada-build");
-    let hw_src = manifest_dir.join("../../vendor/libhwbase");
-    let gfx_src = manifest_dir.join("../../vendor/libgfxinit");
+    let (hw_src, gfx_src) = configured_source_paths();
     let bridge_src = manifest_dir.join("build_support/bridge");
     let hw_work = work.join("libhwbase");
     let gfx_work = work.join("libgfxinit");
 
     recreate_dir(&work);
-    copy_dir(&hw_src, &hw_work)
+    copy_dir(hw_src.as_path(), hw_work.as_path())
         .unwrap_or_else(|err| panic!("copying libhwbase source failed: {err}"));
-    copy_dir(&gfx_src, &gfx_work)
+    copy_dir(gfx_src.as_path(), gfx_work.as_path())
         .unwrap_or_else(|err| panic!("copying libgfxinit source failed: {err}"));
 
     let hw_config = hw_work.join(".config");
@@ -282,6 +281,31 @@ fn default_pch(generation: &str) -> &'static str {
     }
 }
 
+#[cfg(feature = "vendored")]
+fn configured_source_paths() -> (PathBuf, PathBuf) {
+    let sources = libgfxinit_src::Sources::new();
+    let hw = sources.libhwbase().to_path_buf();
+    let gfx = sources.libgfxinit().to_path_buf();
+    println!("cargo:rerun-if-changed={}", hw.display());
+    println!("cargo:rerun-if-changed={}", gfx.display());
+    (hw, gfx)
+}
+
+#[cfg(not(feature = "vendored"))]
+fn configured_source_paths() -> (PathBuf, PathBuf) {
+    let hw = env_path_with_message(
+        "LIBHWBASE_SRC",
+        "LIBHWBASE_SRC must point at a libhwbase checkout, or enable the `vendored` feature",
+    );
+    let gfx = env_path_with_message(
+        "LIBGFXINIT_SRC",
+        "LIBGFXINIT_SRC must point at a libgfxinit checkout, or enable the `vendored` feature",
+    );
+    println!("cargo:rerun-if-changed={}", hw.display());
+    println!("cargo:rerun-if-changed={}", gfx.display());
+    (hw, gfx)
+}
+
 fn link_prebuilt_archives() {
     let gfx_dir = env_path("LIBGFXINIT_LIB_DIR");
     let hw_dir = env::var_os("LIBHWBASE_LIB_DIR")
@@ -307,9 +331,16 @@ fn link_prebuilt_archives() {
 }
 
 fn env_path(name: &str) -> PathBuf {
+    env_path_with_message(
+        name,
+        &format!("{name} must be set when feature link-prebuilt is enabled"),
+    )
+}
+
+fn env_path_with_message(name: &str, message: &str) -> PathBuf {
     env::var_os(name)
         .map(PathBuf::from)
-        .unwrap_or_else(|| panic!("{name} must be set when feature link-prebuilt is enabled"))
+        .unwrap_or_else(|| panic!("{message}"))
 }
 
 fn env_truthy(name: &str) -> bool {
