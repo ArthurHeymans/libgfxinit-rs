@@ -1,0 +1,34 @@
+[package]
+name = "libgfxinit-rs"
+version = "0.1.0"
+edition = "2021"
+license = "GPL-2.0-or-later"
+description = "no_std Rust bindings for coreboot/libgfxinit's Intel GMA Ada ABI"
+
+[lib]
+name = "libgfxinit"
+path = "src/lib.rs"
+
+[features]
+default = ["fb-callback", "build-ada"]
+# Provide the Ada-imported fb_add_framebuffer_info_simple() symbol and store
+# the last framebuffer description for Rust callers.
+fb-callback = []
+# Build vendored libhwbase/libgfxinit Ada sources for non-hosted targets.
+build-ada = ["libgfxinit-sys/build-ada"]
+# Verify/link already-built Ada archives instead of building vendored sources.
+link-prebuilt = ["libgfxinit-sys/link-prebuilt"]
+# Link hosted libgnat. Firmware integrations usually provide their own RTS.
+hosted-gnat-runtime = ["libgfxinit-sys/hosted-gnat-runtime"]
+
+# Mutually exclusive hardware generation selectors. Select exactly one for
+# firmware/no_std builds, e.g. `features = ["gen-haswell"]`.
+gen-g45 = ["libgfxinit-sys/gen-g45"]
+gen-ironlake = ["libgfxinit-sys/gen-ironlake"]
+gen-haswell = ["libgfxinit-sys/gen-haswell"]
+gen-broxton = ["libgfxinit-sys/gen-broxton"]
+gen-skylake = ["libgfxinit-sys/gen-skylake"]
+gen-tigerlake = ["libgfxinit-sys/gen-tigerlake"]
+
+[dependencies]
+libgfxinit-sys = { path = "crates/libgfxinit-sys", version = "0.1.0", default-features = false }

@@ -1,0 +1,33 @@
+[package]
+name = "libgfxinit-sys"
+version = "0.1.0"
+edition = "2021"
+license = "GPL-2.0-or-later"
+description = "Low-level no_std FFI and Ada build glue for coreboot/libgfxinit"
+build = "build.rs"
+links = "gfxinit"
+
+[lib]
+path = "src/lib.rs"
+
+[features]
+default = ["build-ada"]
+# Build vendored libhwbase/libgfxinit Ada sources for non-hosted targets.
+build-ada = ["llvm-ada-toolchain"]
+# Only verify/link an already-built libgfxinit/libhw archive.
+link-prebuilt = ["llvm-ada-toolchain"]
+# Enforce that ADA_CC is GNAT LLVM.
+llvm-ada-toolchain = []
+# Link hosted libgnat. Firmware integrations usually provide their own RTS and
+# should leave this disabled.
+hosted-gnat-runtime = []
+
+# Mutually-exclusive generation selectors. Build.rs enforces exactly one when
+# Ada is built. They are features despite Cargo's additive semantics because
+# build.rs can give a clear error if multiple are enabled.
+gen-g45 = []
+gen-ironlake = []
+gen-haswell = []
+gen-broxton = []
+gen-skylake = []
+gen-tigerlake = []
